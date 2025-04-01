@@ -17,7 +17,7 @@
 PharmaOCR aims to create arabic, high-performing, and practical OCR tool that help pharmacists get their medical orders easier by registering handwritten orders using their smartphones.
 
 <div align="center">
-    <img src="https://github.com/TarekSaati/PharmaOCR/blob/main/samples/det_sample.png" width="250">
+    <img src="https://github.com/TarekSaati/PharmaOCR/blob/main/samples/prediction_sample.png" width="350">
 </div>
 
 ## 📚 Documentation
