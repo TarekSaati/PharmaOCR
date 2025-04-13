@@ -1,0 +1,21 @@
+<PreferenceScreen>
+    <PreferenceCategory title="OCR Settings">
+        <EditTextPreference
+            title="Detection Model"
+            key="DET_MODEL_PATH_KEY"
+            defaultValue="models/ocr_detection"
+            summary="Path to detection model"/>
+            
+        <EditTextPreference
+            title="Classification Model"
+            key="CLS_MODEL_PATH_KEY"
+            defaultValue="models/ocr_classification"
+            summary="Path to classification model"/>
+            
+        <EditTextPreference
+            title="Class Labels"
+            key="CLS_LABEL_PATH_KEY"
+            defaultValue="labels/arabic_labels"
+            summary="Path to classification labels"/>
+    </PreferenceCategory>
+</PreferenceScreen>
