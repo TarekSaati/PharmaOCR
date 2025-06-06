@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import json
 import os
@@ -8,8 +9,8 @@ from sklearn.model_selection import train_test_split
 # Configuration
 dataset_root = r".\dataset"
 csv_path = os.path.join(dataset_root, "labels.csv")
-target_size = 640  # Target image size
-min_samples_per_class = 5  # Minimum samples per class in each split
+target_size = 448  # Target image size
+min_samples_per_class = 15  # Minimum samples per class in each split
 
 # Create resized directories
 for split in ['train', 'val', 'test']:
@@ -30,114 +31,137 @@ for _, row in df.iterrows():
         continue
 
 # Filter classes with insufficient samples
-valid_classes = [cls for cls in class_distribution 
-                if len(class_distribution[cls]) >= 3 * min_samples_per_class]
+# valid_classes = [cls for cls in class_distribution 
+#                 if len(class_distribution[cls]) >= min_samples_per_class]
+valid_classes = ['Flagyl', 'Doprane', 'Toplexil']
+sparse_classes = [cls for cls in class_distribution 
+                if len(class_distribution[cls]) < min_samples_per_class]
+
 print(f"Selected {len(valid_classes)} classes with sufficient samples")
+print(f"Selected {len(sparse_classes)} as sparse classes")
+print("=========================================")
 
-# Second pass: process only valid classes
+class_counts = {}
+for cls in class_distribution:
+    class_counts[cls] = len(class_distribution.get(cls, 0))
+max_class_occurances = np.max(list(class_counts.values()))
+valid_classes.append("Unknown")
+
+# Second pass: process valid classes
 annotations = {}
-class_files = defaultdict(list)
+class_files = {'train': defaultdict(list),
+               'val': defaultdict(list),
+               'test': defaultdict(list)
+            }
 
-for filename, group in df.groupby('filename'):
+# Load original images
+for split in ["train", "test", "val"]:
     try:
-        # Load original image
-        original_path = os.path.join(dataset_root, 'train', filename)
-        img = cv2.imread(original_path)
-        if img is None:
-            continue
+        split_path = os.path.join(dataset_root, split)
+
+        for filename in os.listdir(split_path):
             
-        # Calculate scaling
-        h, w = img.shape[:2]
-        scale = target_size / max(h, w)
-        new_h, new_w = int(h * scale), int(w * scale)
-        
-        # Store image info
-        annotations[filename] = {
-            'scaled_dim': (new_w, new_h),
-            'regions': [],
-            'scale_factor': scale
-        }
-        
-        # Process regions
-        for _, row in group.iterrows():
-            try:
-                region_attr = json.loads(row['region_attributes'].replace("'", '"'))
-                class_name = region_attr.get('name', None)
-                if class_name not in valid_classes:
-                    continue
-                    
-                shape_attr = json.loads(row['region_shape_attributes'].replace("'", '"'))
-                x, y = shape_attr['x'], shape_attr['y']
-                width, height = shape_attr['width'], shape_attr['height']
-                
-                scaled_points = [
-                    [int(x * scale), int(y * scale)],
-                    [int((x + width) * scale), int(y * scale)],
-                    [int((x + width) * scale), int((y + height) * scale)],
-                    [int(x * scale), int((y + height) * scale)]
-                ]
-                
-                annotations[filename]['regions'].append({
-                    "transcription": class_name,
-                    "points": scaled_points
-                })
-                class_files[class_name].append(filename)
-            except:
+            file_path = os.path.join(split_path, filename)
+            img = cv2.imread(file_path)
+            if img is None:
                 continue
-                
+
+            # Calculate scaling
+            h, w = img.shape[:2]
+            scale = target_size / max(h, w)
+            new_h, new_w = int(h * scale), int(w * scale)
+            
+            # Store image info
+            annotations[filename] = {
+                'scaled_dim': (new_w, new_h),
+                'regions': [],
+                'scale_factor': scale
+            }
+            
+            # Process regions
+            filename_group = df.groupby('filename').get_group(filename)
+            for _, row in filename_group.iterrows():
+                try:
+                    region_attr = json.loads(row['region_attributes'].replace("'", '"'))
+                    class_name = region_attr.get('name', None)
+                                        
+                    shape_attr = json.loads(row['region_shape_attributes'].replace("'", '"'))
+                    x, y = shape_attr['x'], shape_attr['y']
+                    width, height = shape_attr['width'], shape_attr['height']
+                    
+                    scaled_points = [
+                        [int(x * scale), int(y * scale)],
+                        [int((x + width) * scale), int(y * scale)],
+                        [int((x + width) * scale), int((y + height) * scale)],
+                        [int(x * scale), int((y + height) * scale)]
+                    ]
+                    
+                    if class_name in sparse_classes \
+                            and len(class_files[split]["Unknown"]) < max_class_occurances:
+                        class_files[split]["Unknown"].append(filename)
+                        annotations[filename]['regions'].append({
+                            "transcription": "Unknown",
+                            "points": scaled_points
+                        })
+                    elif class_name in valid_classes:                
+                        annotations[filename]['regions'].append({
+                                "transcription": class_name,
+                                "points": scaled_points
+                            })                                        
+                        class_files[split][class_name].append(filename)
+                except:
+                    continue
+        
     except Exception as e:
         print(f"Error processing {filename}: {str(e)}")
         continue
 
 # Class-aware splitting
-train_files = []
-val_files = []
-test_files = []
+split_files = {'train': [], 'val': [], 'test': []}
+train_classes = []
 
+# generate train files
 for class_name in valid_classes:
-    class_file_list = list(set(class_files[class_name]))  # Unique files per class
+    class_file_list = list(set(class_files["train"][class_name]))  # Unique files per class
     
     # Ensure minimum samples per split
-    if len(class_file_list) < 3 * min_samples_per_class:
+    if len(class_file_list) < min_samples_per_class:
         continue
-        
-    # Split files for this class
-    cls_train, cls_temp = train_test_split(
-        class_file_list,
-        test_size=0.3,
-        random_state=42
-    )
-    cls_val, cls_test = train_test_split(
-        cls_temp,
-        test_size=0.33,
-        random_state=42
-    )
     
-    train_files.extend(cls_train)
-    val_files.extend(cls_val)
-    test_files.extend(cls_test)
+    train_classes.append(class_name)
+    split_files['train'].extend(class_file_list)
+    
+# generate val & test files
+for split in ['val', 'test']:
+    for class_name in valid_classes:
+        class_file_list = list(set(class_files[split][class_name]))  # Unique files per class
+        
+        # Ensure class exists in train split
+        if class_name not in train_classes:
+            continue
+        
+        split_files[split].extend(class_file_list)
 
 # Remove duplicates and shuffle
-train_files = list(set(train_files))
-val_files = list(set(val_files))
-test_files = list(set(test_files))
+for split in ["train", "test", "val"]:
+    split_files[split] = list(set(split_files[split])) 
 
 print(f"\nFinal split counts:")
-print(f"- Train: {len(train_files)} images")
-print(f"- Val: {len(val_files)} images")
-print(f"- Test: {len(test_files)} images")
+print(f"- Train: {len(split_files['train'])} images")
+print(f"- Val: {len(split_files['val'])} images")
+print(f"- Test: {len(split_files['test'])} images")
 
 # Save resized images and annotations
-for split_name, files in [('train', train_files), ('val', val_files), ('test', test_files)]:
+for split_name, files in [('train', split_files['train']), ('val', split_files['val']), ('test', split_files['test'])]:
     with open(os.path.join(dataset_root, f"{split_name}.txt"), 'w', encoding='utf-8') as f:
         for filename in files:
-            if filename not in annotations:
-                continue
+            # if filename not in annotations:
+            #     continue
                 
             # Save resized image
             resized_path = os.path.join(dataset_root, 'resized', split_name, filename)
             if not os.path.exists(resized_path):
-                img = cv2.imread(os.path.join(dataset_root, 'train', filename))
+                img = cv2.imread(os.path.join(dataset_root, split_name, filename))
                 if img is not None:
                     cv2.imwrite(resized_path, cv2.resize(img, 
                         annotations[filename]['scaled_dim']))
@@ -157,6 +181,6 @@ def count_classes(split_files):
     return class_counts
 
 print("\nClass distribution verification:")
-print("Train:", len(count_classes(train_files)), "classes")
-print("Val:", len(count_classes(val_files)), "classes")
-print("Test:", len(count_classes(test_files)), "classes")
+print("Train:", len(count_classes(split_files['train'])), "classes")
+print("Val:", len(count_classes(split_files['val'])), "classes")
+print("Test:", len(count_classes(split_files['test'])), "classes")
