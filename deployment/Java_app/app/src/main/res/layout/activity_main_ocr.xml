@@ -1,0 +1,53 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_margin="16dp">
+
+    <TableLayout
+        android:id="@+id/results_table"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:stretchColumns="0,1"
+        android:shrinkColumns="0,1">
+
+        <TableRow
+            android:background="?android:attr/selectableItemBackground">
+            
+            <TextView
+                android:text="Item Name"
+                android:textStyle="bold"
+                android:padding="16dp"
+                android:textDirection="locale"/>
+                
+            <TextView
+                android:text="Quantity"
+                android:textStyle="bold"
+                android:padding="16dp"
+                android:textAlignment="viewEnd"/>
+        </TableRow>
+    </TableLayout>
+
+    <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/v_output_info"
+                android:layout_below="@+id/v_input_info">
+
+            <ImageView
+                    android:id="@+id/iv_input_image"
+                    android:layout_width="400dp"
+                    android:layout_height="400dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="12dp"
+                    android:layout_marginRight="12dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"/>
+        </RelativeLayout>
+
+    <!-- Original image/inference views -->
+</LinearLayout>
