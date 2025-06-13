@@ -19,6 +19,12 @@ PharmaOCR aims to create arabic, high-performing, and practical OCR tool that he
 <div align="center">
     <img src="https://github.com/TarekSaati/PharmaOCR/blob/main/development/samples/sample.jpg" width="350">
 </div>
+<div align="center">
+    <img src="https://github.com/TarekSaati/PharmaOCR/blob/main/development/samples/layout1.jpg" width="350">
+</div>
+<div align="center">
+    <img src="https://github.com/TarekSaati/PharmaOCR/blob/main/development/samples/layout2.jpg" width="350">
+</div>
 
 ## 📚 Documentation
 
