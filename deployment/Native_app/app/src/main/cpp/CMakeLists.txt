@@ -9,7 +9,7 @@ cmake_minimum_required(VERSION 3.4.1)
 # the relative paths to its source code. You can define multiple libraries, and
 # CMake builds them for you. Gradle automatically packages shared libraries with
 # your APK.
-set(PaddleLite_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../PaddleLite")
+set(PaddleLite_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../PaddleLiteV2_12")
 include_directories(${PaddleLite_DIR}/cxx/include)
 
 set(OpenCV_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../OpenCV/sdk/native/jni")

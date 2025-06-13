@@ -33,7 +33,7 @@ for _, row in df.iterrows():
 # Filter classes with insufficient samples
 # valid_classes = [cls for cls in class_distribution 
 #                 if len(class_distribution[cls]) >= min_samples_per_class]
-valid_classes = ['Flagyl', 'Doprane', 'Toplexil']
+valid_classes = ['Toplexil', 'Flagyl', 'Doprane', 'Unknown']
 sparse_classes = [cls for cls in class_distribution 
                 if len(class_distribution[cls]) < min_samples_per_class]
 
@@ -45,7 +45,6 @@ class_counts = {}
 for cls in class_distribution:
     class_counts[cls] = len(class_distribution.get(cls, 0))
 max_class_occurances = np.max(list(class_counts.values()))
-valid_classes.append("Unknown")
 
 # Second pass: process valid classes
 annotations = {}

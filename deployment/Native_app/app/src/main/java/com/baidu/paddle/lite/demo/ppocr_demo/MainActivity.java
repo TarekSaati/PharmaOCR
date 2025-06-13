@@ -58,10 +58,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Came
 
     // Model settings of object detection
     //protected String detModelPath = "detection_lite.nb";
-    protected String classModelPath = "text_classifier.nb";
+    protected String classModelPath = "MobileNetV3Clas.nb";
     //protected String detModelPath = "ch_ppocr_mobile_v2.0_det_slim_opt.nb";
     protected String detModelPath = "Multilingual_PP-OCRv3_det_slim_infer.nb";
-    protected String labelPath = "pharma_label_list";
+    protected String labelPath = "four_class_label_list";
     protected String configPath = "config.txt";
     protected int cpuThreadNum = 1;
     protected String cpuPowerMode = "LITE_POWER_HIGH";

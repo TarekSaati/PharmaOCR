@@ -1,4 +1,3 @@
-development/pretrain_models/*
 development/dataset/*
 development/output/*
 deployment/Java_app/*.iml
